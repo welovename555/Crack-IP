@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crack-IP | IP Intelligence Scanner</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-text">CRACK-IP</span>
+                <div class="logo-subtitle">IP Intelligence Scanner</div>
+            </div>
+            <div class="status-indicator" id="statusIndicator">
+                <div class="pulse"></div>
+                <span>SCANNING...</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Loading Screen -->
+            <div class="loading-screen" id="loadingScreen">
+                <div class="scanner-animation">
+                    <div class="scanner-line"></div>
+                    <div class="scanner-grid"></div>
+                </div>
+                <div class="loading-text">
+                    <span class="typing-text" id="loadingText">Initializing IP scan...</span>
+                </div>
+            </div>
+
+            <!-- Results Container -->
+            <div class="results-container" id="resultsContainer" style="display: none;">
+                <!-- IP Display -->
+                <div class="ip-display">
+                    <div class="ip-label">TARGET IP</div>
+                    <div class="ip-address" id="ipAddress">---.---.---.---</div>
+                </div>
+
+                <!-- Risk Assessment -->
+                <div class="risk-assessment" id="riskAssessment">
+                    <div class="risk-level" id="riskLevel">ANALYZING</div>
+                    <div class="risk-bar">
+                        <div class="risk-fill" id="riskFill"></div>
+                    </div>
+                    <div class="risk-text" id="riskText">Calculating threat level...</div>
+                </div>
+
+                <!-- Data Grid -->
+                <div class="data-grid">
+                    <div class="data-item">
+                        <div class="data-label">LOCATION</div>
+                        <div class="data-value" id="location">Scanning...</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">ISP</div>
+                        <div class="data-value" id="isp">Scanning...</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">CONNECTION TYPE</div>
+                        <div class="data-value" id="connectionType">Scanning...</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">VPN/PROXY</div>
+                        <div class="data-value" id="vpnStatus">Scanning...</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">REPUTATION</div>
+                        <div class="data-value" id="reputation">Scanning...</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">RECOMMENDATION</div>
+                        <div class="data-value" id="recommendation">Analyzing...</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="rescanBtn">
+                        <span class="btn-icon">🔄</span>
+                        RESCAN TARGET
+                    </button>
+                    <button class="btn btn-secondary" id="detailsBtn">
+                        <span class="btn-icon">📊</span>
+                        DETAILED ANALYSIS
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Screen -->
+            <div class="error-screen" id="errorScreen" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <div class="error-title">SCAN FAILED</div>
+                <div class="error-message" id="errorMessage">Connection timeout</div>
+                <button class="btn btn-primary" id="retryBtn">
+                    <span class="btn-icon">🔄</span>
+                    RETRY SCAN
+                </button>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-text">
+                <span class="warning">⚠️ FOR EDUCATIONAL PURPOSES ONLY</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
