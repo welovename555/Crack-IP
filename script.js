@@ -19,6 +19,8 @@ const CONFIG = {
 // Global state
 let currentIP = null;
 let scanResults = {};
+let progressInterval = null;
+let currentProgress = 0;
 
 // DOM Elements
 const elements = {
@@ -27,6 +29,8 @@ const elements = {
     errorScreen: document.getElementById('errorScreen'),
     statusIndicator: document.getElementById('statusIndicator'),
     loadingText: document.getElementById('loadingText'),
+    progressPercentage: document.getElementById('progressPercentage'),
+    progressBar: document.getElementById('progressBar'),
     ipAddress: document.getElementById('ipAddress'),
     riskLevel: document.getElementById('riskLevel'),
     riskFill: document.getElementById('riskFill'),
@@ -44,8 +48,61 @@ const elements = {
     errorMessage: document.getElementById('errorMessage')
 };
 
+// Matrix Rain Effect
+class MatrixRain {
+    constructor() {
+        this.canvas = document.getElementById('matrixCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()_+-=[]{}|;:,.<>?';
+        this.drops = [];
+        this.fontSize = 14;
+        
+        this.init();
+        this.animate();
+    }
+    
+    init() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        
+        const columns = Math.floor(this.canvas.width / this.fontSize);
+        
+        for (let i = 0; i < columns; i++) {
+            this.drops[i] = Math.random() * -100;
+        }
+    }
+    
+    animate() {
+        this.ctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.ctx.fillStyle = '#00ff41';
+        this.ctx.font = `${this.fontSize}px monospace`;
+        
+        for (let i = 0; i < this.drops.length; i++) {
+            const char = this.characters[Math.floor(Math.random() * this.characters.length)];
+            this.ctx.fillText(char, i * this.fontSize, this.drops[i] * this.fontSize);
+            
+            if (this.drops[i] * this.fontSize > this.canvas.height && Math.random() > 0.975) {
+                this.drops[i] = 0;
+            }
+            this.drops[i]++;
+        }
+        
+        requestAnimationFrame(() => this.animate());
+    }
+    
+    resize() {
+        this.init();
+    }
+}
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Matrix Rain Effect
+    const matrixRain = new MatrixRain();
+    window.addEventListener('resize', () => matrixRain.resize());
+    
     initializeApp();
     setupEventListeners();
 });
@@ -74,16 +131,23 @@ function showLoadingScreen() {
     elements.resultsContainer.style.display = 'none';
     elements.errorScreen.style.display = 'none';
     
-    updateStatusIndicator('SCANNING...', 'scanning');
+    updateStatusIndicator('กำลังสแกน...', 'scanning');
+    
+    // Reset progress
+    currentProgress = 0;
+    updateProgress(0);
+    
+    // Start progress animation
+    startProgressAnimation();
     
     // Simulate typing effect for loading messages
     const messages = [
-        'Initializing IP scan...',
-        'Connecting to target...',
-        'Analyzing network data...',
-        'Checking VPN/Proxy...',
-        'Calculating risk score...',
-        'Finalizing results...'
+        'เริ่มต้นการสแกน IP...',
+        'เชื่อมต่อกับเป้าหมาย...',
+        'วิเคราะห์ข้อมูลเครือข่าย...',
+        'ตรวจสอบ VPN/Proxy...',
+        'คำนวณคะแนนความเสี่ยง...',
+        'จัดเตรียมผลลัพธ์...'
     ];
     
     let messageIndex = 0;
@@ -95,6 +159,31 @@ function showLoadingScreen() {
             clearInterval(messageInterval);
         }
     }, 500);
+}
+
+function startProgressAnimation() {
+    if (progressInterval) clearInterval(progressInterval);
+    
+    progressInterval = setInterval(() => {
+        if (currentProgress < 100) {
+            // Simulate realistic progress with some randomness
+            const increment = Math.random() * 3 + 1;
+            currentProgress = Math.min(100, currentProgress + increment);
+            updateProgress(currentProgress);
+        } else {
+            clearInterval(progressInterval);
+        }
+    }, 100);
+}
+
+function updateProgress(percentage) {
+    const roundedPercentage = Math.floor(percentage);
+    elements.progressPercentage.textContent = `${roundedPercentage}%`;
+    
+    // Calculate stroke-dashoffset for circular progress
+    const circumference = 2 * Math.PI * 90; // radius = 90
+    const offset = circumference - (percentage / 100) * circumference;
+    elements.progressBar.style.strokeDashoffset = offset;
 }
 
 function typeText(element, text) {
@@ -125,11 +214,18 @@ async function startIPScan() {
         // Wait for minimum scan duration for dramatic effect
         await new Promise(resolve => setTimeout(resolve, CONFIG.SCAN_DURATION));
         
+        // Ensure progress reaches 100%
+        currentProgress = 100;
+        updateProgress(100);
+        
+        // Small delay to show 100%
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         displayResults();
         
     } catch (error) {
         console.error('Scan failed:', error);
-        showError('Failed to scan IP address. Please check your connection and try again.');
+        showError('ไม่สามารถสแกน IP ได้ กรุณาตรวจสอบการเชื่อมต่อและลองใหม่');
     }
 }
 
@@ -243,7 +339,12 @@ function displayResults() {
     elements.loadingScreen.style.display = 'none';
     elements.resultsContainer.style.display = 'block';
     
-    updateStatusIndicator('SCAN COMPLETE', 'complete');
+    updateStatusIndicator('สแกนเสร็จสิ้น', 'complete');
+    
+    // Clear progress interval
+    if (progressInterval) {
+        clearInterval(progressInterval);
+    }
     
     // Display IP
     elements.ipAddress.textContent = scanResults.ip;
@@ -251,13 +352,20 @@ function displayResults() {
     // Display location
     const location = [scanResults.city, scanResults.region, scanResults.country]
         .filter(Boolean).join(', ');
-    elements.location.textContent = location || 'Unknown';
+    elements.location.textContent = location || 'ไม่ทราบ';
     
     // Display ISP
-    elements.isp.textContent = scanResults.isp || 'Unknown';
+    elements.isp.textContent = scanResults.isp || 'ไม่ทราบ';
     
     // Display connection type
-    elements.connectionType.textContent = scanResults.connectionType || 'Unknown';
+    const connectionTypeMap = {
+        'Residential': 'บ้านพักอาศัย',
+        'Mobile': 'มือถือ',
+        'Corporate': 'องค์กร',
+        'Data Center': 'ศูนย์ข้อมูล',
+        'Hosting': 'โฮสติ้ง'
+    };
+    elements.connectionType.textContent = connectionTypeMap[scanResults.connectionType] || scanResults.connectionType || 'ไม่ทราบ';
     
     // Display VPN/Proxy status
     const vpnProxyStatus = [];
@@ -270,12 +378,17 @@ function displayResults() {
         vpnElement.textContent = vpnProxyStatus.join(' + ');
         vpnElement.className = 'data-value warning';
     } else {
-        vpnElement.textContent = 'CLEAN';
+        vpnElement.textContent = 'สะอาด';
         vpnElement.className = 'data-value safe';
     }
     
     // Display reputation
-    elements.reputation.textContent = scanResults.reputation || 'Unknown';
+    const reputationMap = {
+        'Clean': 'สะอาด',
+        'Medium Risk': 'เสี่ยงปานกลาง',
+        'High Risk': 'เสี่ยงสูง'
+    };
+    elements.reputation.textContent = reputationMap[scanResults.reputation] || scanResults.reputation || 'ไม่ทราบ';
     elements.reputation.className = `data-value ${getReputationClass(scanResults.reputation)}`;
     
     // Calculate and display risk assessment
@@ -292,15 +405,15 @@ function displayRiskAssessment() {
     let riskLevel, riskClass, riskWidth;
     
     if (riskScore > 75 || (hasVPN && riskScore > 25)) {
-        riskLevel = 'HIGH RISK';
+        riskLevel = 'เสี่ยงสูง';
         riskClass = 'high';
         riskWidth = Math.max(75, riskScore);
     } else if (riskScore > 25 || hasVPN) {
-        riskLevel = 'MEDIUM RISK';
+        riskLevel = 'เสี่ยงปานกลาง';
         riskClass = 'medium';
         riskWidth = Math.max(40, riskScore);
     } else {
-        riskLevel = 'LOW RISK';
+        riskLevel = 'เสี่ยงต่ำ';
         riskClass = 'safe';
         riskWidth = Math.max(10, riskScore);
     }
@@ -308,7 +421,7 @@ function displayRiskAssessment() {
     elements.riskLevel.textContent = riskLevel;
     elements.riskLevel.className = `risk-level ${riskClass}`;
     elements.riskFill.style.width = `${Math.min(riskWidth, 100)}%`;
-    elements.riskText.textContent = `Risk Score: ${riskScore}/100`;
+    elements.riskText.textContent = `คะแนนความเสี่ยง: ${riskScore}/100`;
 }
 
 function displayRecommendation() {
@@ -318,13 +431,13 @@ function displayRecommendation() {
     let recommendation, recommendationClass;
     
     if (riskScore > 75 || (hasVPN && riskScore > 50)) {
-        recommendation = '🚫 HIGH RISK - BLOCK';
+        recommendation = '🚫 เสี่ยงสูง - ควรบล็อก';
         recommendationClass = 'danger';
     } else if (riskScore > 25 || hasVPN) {
-        recommendation = '⚠️ CAUTION - MONITOR';
+        recommendation = '⚠️ ระวัง - ควรติดตาม';
         recommendationClass = 'warning';
     } else {
-        recommendation = '✅ SAFE - PROCEED';
+        recommendation = '✅ ปลอดภัย - ใช้งานได้';
         recommendationClass = 'safe';
     }
     
@@ -351,41 +464,46 @@ function showError(message) {
     elements.resultsContainer.style.display = 'none';
     elements.errorScreen.style.display = 'block';
     
+    // Clear progress interval
+    if (progressInterval) {
+        clearInterval(progressInterval);
+    }
+    
     elements.errorMessage.textContent = message;
-    updateStatusIndicator('SCAN FAILED', 'error');
+    updateStatusIndicator('การสแกนล้มเหลว', 'error');
 }
 
 function showDetailedAnalysis() {
     const details = `
-=== DETAILED IP ANALYSIS ===
+=== การวิเคราะห์ IP รายละเอียด ===
 
-IP Address: ${scanResults.ip}
-Location: ${scanResults.city}, ${scanResults.region}, ${scanResults.country}
-ISP: ${scanResults.isp}
-Timezone: ${scanResults.timezone}
-Postal Code: ${scanResults.postal || 'N/A'}
+ที่อยู่ IP: ${scanResults.ip}
+ตำแหน่ง: ${scanResults.city}, ${scanResults.region}, ${scanResults.country}
+ผู้ให้บริการ: ${scanResults.isp}
+เขตเวลา: ${scanResults.timezone}
+รหัสไปรษณีย์: ${scanResults.postal || 'ไม่มี'}
 
-=== SECURITY ANALYSIS ===
-VPN Detected: ${scanResults.isVPN ? 'YES' : 'NO'}
-Proxy Detected: ${scanResults.isProxy ? 'YES' : 'NO'}
-Tor Network: ${scanResults.isTor ? 'YES' : 'NO'}
-Connection Type: ${scanResults.connectionType}
-Risk Score: ${scanResults.riskScore}/100
-Reputation: ${scanResults.reputation}
+=== การวิเคราะห์ความปลอดภัย ===
+ตรวจพบ VPN: ${scanResults.isVPN ? 'ใช่' : 'ไม่'}
+ตรวจพบ Proxy: ${scanResults.isProxy ? 'ใช่' : 'ไม่'}
+เครือข่าย Tor: ${scanResults.isTor ? 'ใช่' : 'ไม่'}
+ประเภทการเชื่อมต่อ: ${scanResults.connectionType}
+คะแนนความเสี่ยง: ${scanResults.riskScore}/100
+ชื่อเสียง: ${scanResults.reputation}
 
-=== RECOMMENDATION ===
+=== คำแนะนำ ===
 ${elements.recommendation.textContent}
 
-=== NOTES ===
-- Risk scores above 75 indicate high probability of fraudulent activity
-- VPN/Proxy detection may affect account registration
-- Monitor suspicious IPs for unusual activity patterns
+=== หมายเหตุ ===
+- คะแนนความเสี่ยงเกิน 75 บ่งชี้ถึงความเป็นไปได้สูงของกิจกรรมฉ้อโกง
+- การตรวจพบ VPN/Proxy อาจส่งผลต่อการสมัครบัญชี
+- ติดตาม IP ที่น่าสงสัยเพื่อดูรูปแบบกิจกรรมที่ผิดปกติ
     `.trim();
     
     // Create modal or alert with detailed info
-    if (confirm('Show detailed analysis in console? (Press OK to view in browser console)')) {
+    if (confirm('แสดงการวิเคราะห์รายละเอียดใน console? (กด OK เพื่อดูใน browser console)')) {
         console.log(details);
-        alert('Detailed analysis has been logged to the browser console. Press F12 to view.');
+        alert('การวิเคราะห์รายละเอียดถูกบันทึกใน browser console แล้ว กด F12 เพื่อดู');
     }
 }
 

@@ -14,6 +14,17 @@ body {
     position: relative;
 }
 
+/* Matrix Rain Canvas */
+#matrixCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    opacity: 0.3;
+}
+
 /* Animated Background */
 body::before {
     content: '';
@@ -112,44 +123,64 @@ body::before {
     padding: 40px 20px;
 }
 
-.scanner-animation {
+.progress-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.progress-circle {
     position: relative;
     width: 200px;
     height: 200px;
-    margin: 0 auto 30px;
-    border: 2px solid rgba(0, 255, 65, 0.3);
-    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.scanner-line {
+.progress-inner {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 2px;
-    height: 80px;
-    background: linear-gradient(to bottom, transparent, #00ff41, transparent);
-    transform-origin: bottom center;
-    transform: translate(-50%, -100%) rotate(0deg);
-    animation: scan 2s linear infinite;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
 }
 
-@keyframes scan {
-    0% { transform: translate(-50%, -100%) rotate(0deg); }
-    100% { transform: translate(-50%, -100%) rotate(360deg); }
+.progress-percentage {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #00ff41;
+    text-shadow: 0 0 20px rgba(0, 255, 65, 0.8);
 }
 
-.scanner-grid {
+.progress-svg {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
-    background-image: 
-        linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
-    border-radius: 50%;
-    opacity: 0.5;
+    top: 0;
+    left: 0;
+    transform: rotate(-90deg);
+}
+
+.progress-bg {
+    fill: none;
+    stroke: rgba(0, 255, 65, 0.1);
+    stroke-width: 4;
+}
+
+.progress-bar {
+    fill: none;
+    stroke: #00ff41;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 565.48; /* 2 * π * 90 */
+    stroke-dashoffset: 565.48;
+    transition: stroke-dashoffset 0.3s ease;
+    filter: drop-shadow(0 0 10px rgba(0, 255, 65, 0.8));
 }
 
 .loading-text {
@@ -405,9 +436,23 @@ body::before {
         font-size: 1.4rem;
     }
     
-    .scanner-animation {
+    .progress-circle {
         width: 150px;
         height: 150px;
+    }
+    
+    .progress-svg {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .progress-bg,
+    .progress-bar {
+        stroke-dasharray: 424.11; /* 2 * π * 67.5 */
+    }
+    
+    .progress-bar {
+        stroke-dashoffset: 424.11;
     }
     
     .action-buttons {

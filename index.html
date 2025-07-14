@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crack-IP | IP Intelligence Scanner</title>
+    <title>Crack-IP | ระบบตรวจสอบ IP อัจฉริยะ</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Matrix Rain Effect -->
+    <canvas id="matrixCanvas"></canvas>
+    
     <div class="container">
         <!-- Header -->
         <header class="header">
             <div class="logo">
                 <span class="logo-text">CRACK-IP</span>
-                <div class="logo-subtitle">IP Intelligence Scanner</div>
+                <div class="logo-subtitle">ระบบตรวจสอบ IP อัจฉริยะ</div>
             </div>
             <div class="status-indicator" id="statusIndicator">
                 <div class="pulse"></div>
-                <span>SCANNING...</span>
+                <span>กำลังสแกน...</span>
             </div>
         </header>
 
@@ -27,12 +30,19 @@
         <main class="main-content">
             <!-- Loading Screen -->
             <div class="loading-screen" id="loadingScreen">
-                <div class="scanner-animation">
-                    <div class="scanner-line"></div>
-                    <div class="scanner-grid"></div>
+                <div class="progress-container">
+                    <div class="progress-circle">
+                        <div class="progress-inner">
+                            <div class="progress-percentage" id="progressPercentage">0%</div>
+                        </div>
+                        <svg class="progress-svg" width="200" height="200">
+                            <circle cx="100" cy="100" r="90" class="progress-bg"></circle>
+                            <circle cx="100" cy="100" r="90" class="progress-bar" id="progressBar"></circle>
+                        </svg>
+                    </div>
                 </div>
                 <div class="loading-text">
-                    <span class="typing-text" id="loadingText">Initializing IP scan...</span>
+                    <span class="typing-text" id="loadingText">เริ่มต้นการสแกน IP...</span>
                 </div>
             </div>
 
@@ -40,44 +50,44 @@
             <div class="results-container" id="resultsContainer" style="display: none;">
                 <!-- IP Display -->
                 <div class="ip-display">
-                    <div class="ip-label">TARGET IP</div>
+                    <div class="ip-label">IP เป้าหมาย</div>
                     <div class="ip-address" id="ipAddress">---.---.---.---</div>
                 </div>
 
                 <!-- Risk Assessment -->
                 <div class="risk-assessment" id="riskAssessment">
-                    <div class="risk-level" id="riskLevel">ANALYZING</div>
+                    <div class="risk-level" id="riskLevel">กำลังวิเคราะห์</div>
                     <div class="risk-bar">
                         <div class="risk-fill" id="riskFill"></div>
                     </div>
-                    <div class="risk-text" id="riskText">Calculating threat level...</div>
+                    <div class="risk-text" id="riskText">กำลังคำนวณระดับความเสี่ยง...</div>
                 </div>
 
                 <!-- Data Grid -->
                 <div class="data-grid">
                     <div class="data-item">
-                        <div class="data-label">LOCATION</div>
-                        <div class="data-value" id="location">Scanning...</div>
+                        <div class="data-label">ตำแหน่ง</div>
+                        <div class="data-value" id="location">กำลังสแกน...</div>
                     </div>
                     <div class="data-item">
-                        <div class="data-label">ISP</div>
-                        <div class="data-value" id="isp">Scanning...</div>
+                        <div class="data-label">ผู้ให้บริการ</div>
+                        <div class="data-value" id="isp">กำลังสแกน...</div>
                     </div>
                     <div class="data-item">
-                        <div class="data-label">CONNECTION TYPE</div>
-                        <div class="data-value" id="connectionType">Scanning...</div>
+                        <div class="data-label">ประเภทการเชื่อมต่อ</div>
+                        <div class="data-value" id="connectionType">กำลังสแกน...</div>
                     </div>
                     <div class="data-item">
                         <div class="data-label">VPN/PROXY</div>
-                        <div class="data-value" id="vpnStatus">Scanning...</div>
+                        <div class="data-value" id="vpnStatus">กำลังสแกน...</div>
                     </div>
                     <div class="data-item">
-                        <div class="data-label">REPUTATION</div>
-                        <div class="data-value" id="reputation">Scanning...</div>
+                        <div class="data-label">ชื่อเสียง</div>
+                        <div class="data-value" id="reputation">กำลังสแกน...</div>
                     </div>
                     <div class="data-item">
-                        <div class="data-label">RECOMMENDATION</div>
-                        <div class="data-value" id="recommendation">Analyzing...</div>
+                        <div class="data-label">คำแนะนำ</div>
+                        <div class="data-value" id="recommendation">กำลังวิเคราะห์...</div>
                     </div>
                 </div>
 
@@ -85,11 +95,11 @@
                 <div class="action-buttons">
                     <button class="btn btn-primary" id="rescanBtn">
                         <span class="btn-icon">🔄</span>
-                        RESCAN TARGET
+                        สแกนใหม่
                     </button>
                     <button class="btn btn-secondary" id="detailsBtn">
                         <span class="btn-icon">📊</span>
-                        DETAILED ANALYSIS
+                        วิเคราะห์รายละเอียด
                     </button>
                 </div>
             </div>
@@ -97,11 +107,11 @@
             <!-- Error Screen -->
             <div class="error-screen" id="errorScreen" style="display: none;">
                 <div class="error-icon">⚠️</div>
-                <div class="error-title">SCAN FAILED</div>
-                <div class="error-message" id="errorMessage">Connection timeout</div>
+                <div class="error-title">การสแกนล้มเหลว</div>
+                <div class="error-message" id="errorMessage">การเชื่อมต่อหมดเวลา</div>
                 <button class="btn btn-primary" id="retryBtn">
                     <span class="btn-icon">🔄</span>
-                    RETRY SCAN
+                    ลองใหม่
                 </button>
             </div>
         </main>
@@ -109,7 +119,7 @@
         <!-- Footer -->
         <footer class="footer">
             <div class="footer-text">
-                <span class="warning">⚠️ FOR EDUCATIONAL PURPOSES ONLY</span>
+                <span class="warning">⚠️ เพื่อการศึกษาเท่านั้น</span>
             </div>
         </footer>
     </div>
