@@ -1,13 +1,13 @@
 // Configuration
 const CONFIG = {
     // API Keys - ใส่ API keys ของคุณที่นี่
-    IPQUALITYSCORE_KEY: 'YOUR_API_KEY_HERE', // Get free key from https://www.ipqualityscore.com/
+    IPQUALITYSCORE_KEY: 'yU0rfEBebKjGWGl7A5BL6sNQ8y5lREq0', // IPQualityScore API Key
     
     // API Endpoints
     APIs: {
         primary: 'https://ipapi.co/json/',
         secondary: 'https://ip-api.com/json/',
-        vpnCheck: 'https://ipqualityscore.com/api/json/ip/', // Requires API key
+        vpnCheck: 'https://ipqualityscore.com/api/json/ip/', // IPQualityScore endpoint
         fallback: 'https://ipwhois.app/json/'
     },
     
@@ -193,17 +193,38 @@ async function fetchSecurityInfo(ip) {
     
     try {
         // If API key is provided, use IPQualityScore
-        if (CONFIG.IPQUALITYSCORE_KEY && CONFIG.IPQUALITYSCORE_KEY !== 'YOUR_API_KEY_HERE') {
+        if (CONFIG.IPQUALITYSCORE_KEY) {
             const response = await fetch(`${CONFIG.APIs.vpnCheck}${CONFIG.IPQUALITYSCORE_KEY}/${ip}`);
             if (response.ok) {
                 const data = await response.json();
-                securityData.isVPN = data.vpn || false;
-                securityData.isProxy = data.proxy || false;
-                securityData.isTor = data.tor || false;
-                securityData.riskScore = data.fraud_score || 0;
-                securityData.connectionType = data.connection_type || 'Residential';
-                securityData.reputation = data.fraud_score > 75 ? 'High Risk' : 
-                                        data.fraud_score > 25 ? 'Medium Risk' : 'Clean';
+                
+                // Check if API response is successful
+                if (data.success) {
+                    securityData.isVPN = data.vpn || false;
+                    securityData.isProxy = data.proxy || false;
+                    securityData.isTor = data.tor || false;
+                    securityData.riskScore = data.fraud_score || 0;
+                    securityData.connectionType = data.connection_type || 'Residential';
+                    securityData.reputation = data.fraud_score > 75 ? 'High Risk' : 
+                                            data.fraud_score > 25 ? 'Medium Risk' : 'Clean';
+                    
+                    // Additional IPQualityScore data
+                    securityData.mobile = data.mobile || false;
+                    securityData.recent_abuse = data.recent_abuse || false;
+                    securityData.bot_status = data.bot_status || false;
+                } else {
+                    console.warn('IPQualityScore API error:', data.message);
+                    // Fall back to simulated data
+                    securityData.riskScore = Math.floor(Math.random() * 30);
+                    securityData.isVPN = Math.random() > 0.8;
+                    securityData.isProxy = Math.random() > 0.9;
+                }
+            } else {
+                console.warn('IPQualityScore API request failed');
+                // Fall back to simulated data
+                securityData.riskScore = Math.floor(Math.random() * 30);
+                securityData.isVPN = Math.random() > 0.8;
+                securityData.isProxy = Math.random() > 0.9;
             }
         } else {
             // Simulate basic detection for demo purposes
